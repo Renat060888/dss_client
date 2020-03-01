@@ -8,7 +8,7 @@ using namespace std;
 ICommand::ICommand( common_types::SCommandServices * _commandServices )
     : m_commandServices(_commandServices)
 {
-    m_networkRequest = m_commandServices->network->getRequestInstance();
+    m_networkRequest = m_commandServices->networkClient->getRequestInstance();
 }
 
 ICommand::~ICommand(){
@@ -17,6 +17,11 @@ ICommand::~ICommand(){
 
 // async section
 bool ICommand::execAsync(){
+
+    if( m_networkRequest->isPerforming() ){
+        m_lastError = "request already performed, correlation id [" + m_networkRequest->m_correlationId + "] msg [" + m_outcomingMsg + "]";
+        return false;
+    }
 
     if( ! serializeRequestTemplateMethodPart() ){
         return false;
@@ -31,11 +36,18 @@ bool ICommand::execAsync(){
 
 bool ICommand::isReady(){
 
-    if( ! m_networkRequest->checkResponseReadyness(m_corrId) ){
+    if( ! m_networkRequest->isPerforming() ){
+        return true;
+    }
+
+    if( ! m_networkRequest->checkResponseReadyness() ){
+        if( m_networkRequest->isTimeouted() ){
+            return true;
+        }
         return false;
     }
 
-    m_incomingMsg = m_networkRequest->getAsyncResponse( m_corrId );
+    m_incomingMsg = m_networkRequest->getAsyncResponse();
 
     if( ! parseResponseTemplateMethodPart() ){
         return false;
@@ -46,7 +58,7 @@ bool ICommand::isReady(){
 
 bool ICommand::performAsyncNetworking(){
 
-    m_corrId = m_networkRequest->sendMessageAsync( m_outcomingMsg );
+    m_networkRequest->sendMessageAsync( m_outcomingMsg );
     return true;
 }
 
@@ -70,7 +82,7 @@ bool ICommand::exec(){
 
 bool ICommand::performBlockedNetworking(){
 
-    PEnvironmentRequest request = m_commandServices->network->getRequestInstance();
+    PEnvironmentRequest request = m_commandServices->networkClient->getRequestInstance();
     request->setOutcomingMessage( m_outcomingMsg );
     m_incomingMsg = request->getIncomingMessage();
     return true;

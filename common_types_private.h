@@ -16,7 +16,8 @@ using TClientUniqueId = std::string;
 
 // containers
 struct SCommandServices {
-    PNetworkClient network;
+    PNetworkClient networkClient;
+    PNetworkProvider networkProvider;
 };
 
 

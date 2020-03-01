@@ -6,7 +6,7 @@
 #include <jsoncpp/json/reader.h>
 #include <jsoncpp/json/writer.h>
 
-#include "../common_types_private.h"
+#include "common_types_private.h"
 
 namespace dss_client {
 
@@ -31,8 +31,10 @@ protected:
     // data
     std::string m_outcomingMsg;
     std::string m_incomingMsg;
+    std::string m_lastError;
 
     // service
+    common_types::SCommandServices * m_commandServices;
     Json::FastWriter m_jsonWriter;
     Json::Reader m_jsonReader;
 
@@ -41,11 +43,8 @@ private:
     bool performAsyncNetworking();
 
     // data
-    TCorrelationId m_corrId;
-    std::string m_lastError;
 
     // service
-    common_types::SCommandServices * m_commandServices;
     PEnvironmentRequest m_networkRequest;
 };
 using PCommand = std::shared_ptr<ICommand>;

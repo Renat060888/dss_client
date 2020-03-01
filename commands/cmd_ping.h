@@ -10,7 +10,7 @@ class CommandPing : public ICommand
 public:
     CommandPing( common_types::SCommandServices * _commandServices );
 
-    common_types::TClientUniqueId m_clientId;
+    common_types::TClientUniqueId m_userId;
 
 private:
     virtual bool serializeRequestTemplateMethodPart() override;

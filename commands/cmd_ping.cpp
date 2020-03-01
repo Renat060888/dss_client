@@ -16,7 +16,7 @@ CommandPing::CommandPing( common_types::SCommandServices * _commandServices )
 bool CommandPing::serializeRequestTemplateMethodPart(){
 
     Json::Value rootRecord;
-    rootRecord[ "client_id" ] = m_clientId;
+    rootRecord[ "user_id" ] = m_userId;
     rootRecord[ "cmd_type" ] = "service";
     rootRecord[ "cmd_name" ] = "ping";
 
@@ -38,6 +38,8 @@ bool CommandPing::parseResponseTemplateMethodPart(){
 
 
     VS_LOG_INFO << "parsed msg [" << m_incomingMsg << "]" << endl;
+
+    m_commandServices;
 
 
 

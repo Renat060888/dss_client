@@ -59,6 +59,8 @@ public:
 
         while( ! shutdownCalled ){
 
+            commandServices.networkProvider->runNetworkCallbacks();
+
             // clean out-dated commands
             for( auto iter = commandsInProgress.begin(); iter != commandsInProgress.end(); ){
                 PCommand cmd = ( * iter );
@@ -71,13 +73,18 @@ public:
                 }
             }
 
+            if( commandPing->isReady() ){
+//                VS_LOG_INFO << PRINT_HEADER << " cmd response [" << commandPing->getLastError() << "]" << endl;
+                commandPing->execAsync();
+            }
+
 //            const bool rt = commandPing->execAsync();
 //            const bool rt2 = commandPing->isReady();
 
 
 
 
-            std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+            std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
         }
     }
 
@@ -87,7 +94,9 @@ public:
         command->m_clientId = clientUniqueId;
         command->m_contextName = "bla";
 
-        command->execAsync();
+        if( ! command->execAsync() ){
+            VS_LOG_INFO << PRINT_HEADER << " cmd failed, reason [" << command->getLastError() << "]" << endl;
+        }
 
         commandsInProgress.push_back( command );
     }
@@ -97,7 +106,9 @@ public:
         PCommandContextClose command = std::make_shared<CommandContextClose>( & commandServices );
         command->m_clientId = clientUniqueId;
 
-        command->execAsync();
+        if( ! command->execAsync() ){
+            VS_LOG_INFO << PRINT_HEADER << " cmd failed, reason [" << command->getLastError() << "]" << endl;
+        }
 
         commandsInProgress.push_back( command );
     }
@@ -205,22 +216,22 @@ bool DssClient::init( const SInitSettings & _settings ){
     m_impl->state->settings = _settings;
 
     // network
-    m_impl->commandServices.network = m_impl->createNetworkConnection( _settings );
-    if( ! m_impl->commandServices.network ){
+    m_impl->commandServices.networkClient = m_impl->createNetworkConnection( _settings );
+    if( ! m_impl->commandServices.networkClient ){
         VS_LOG_ERROR << PRINT_HEADER << " network connection failed, reason [" << m_impl->state->lastError << "]" << endl;
         return false;
     }
+    m_impl->commandServices.networkProvider = std::dynamic_pointer_cast<INetworkProvider>( m_impl->commandServices.networkClient );
 
     // ping
     m_impl->commandPing = std::make_shared<CommandPing>( & m_impl->commandServices );
 
     // logger ( library exist in a main system, and therefore logging rules will be imposed from the 'outside' )
 
-    m_impl->commandPing->m_clientId = m_impl->clientUniqueId;
-    m_impl->commandPing->execAsync();
+    m_impl->commandPing->m_userId = m_impl->clientUniqueId;
 
     // async processing
-    m_impl->threadClientMaintenance = new std::thread( & PrivateImplementation::threadClientMaintenance, m_impl );
+    m_impl->threadClientMaintenance = new std::thread( & PrivateImplementation::threadMaintenance, m_impl );
 
     VS_LOG_INFO << PRINT_HEADER << " init success" << endl;
     return true;
