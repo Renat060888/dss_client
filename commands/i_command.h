@@ -13,7 +13,7 @@ namespace dss_client {
 class ICommand
 {
 public:
-    ICommand( common_types::SCommandServices * _commandServices );
+    ICommand( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     virtual ~ICommand();
 
     const std::string & getLastError(){ return m_lastError; }

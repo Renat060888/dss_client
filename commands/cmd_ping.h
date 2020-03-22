@@ -8,9 +8,15 @@ namespace dss_client {
 class CommandPing : public ICommand
 {
 public:
-    CommandPing( common_types::SCommandServices * _commandServices );
+    CommandPing( common_types::SCommandServices * _commandServices, PNetworkClient _network );
 
-    common_types::TClientUniqueId m_userId;
+    // to DSS
+    bool m_toDSS;
+    common_types::TDssClientUniqueId m_userIdToDSS;
+
+    // to Player
+    bool m_toPlayer;
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
 
 private:
     virtual bool serializeRequestTemplateMethodPart() override;

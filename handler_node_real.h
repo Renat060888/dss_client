@@ -24,6 +24,7 @@ public:
 
 
 private:
+    // private stuff
     class SPrivateImplementation * m_impl;
 
 };

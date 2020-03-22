@@ -7,8 +7,8 @@ namespace dss_client {
 
 using namespace std;
 
-CommandContextOpen::CommandContextOpen( common_types::SCommandServices * _commandServices )
-    : ICommand(_commandServices)
+CommandContextOpen::CommandContextOpen( common_types::SCommandServices * _commandServices, PNetworkClient _network )
+    : ICommand(_commandServices, _network)
 {
 
 }
@@ -36,9 +36,6 @@ bool CommandContextOpen::parseResponseTemplateMethodPart(){
         return false;
     }
 
-
-
-    VS_LOG_INFO << "parsed msg [" << m_incomingMsg << "]" << endl;
 
 
 

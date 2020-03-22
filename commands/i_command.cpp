@@ -1,14 +1,16 @@
 
+#include <microservice_common/system/logger.h>
+
 #include "i_command.h"
 
 namespace dss_client {
 
 using namespace std;
 
-ICommand::ICommand( common_types::SCommandServices * _commandServices )
+ICommand::ICommand( common_types::SCommandServices * _commandServices, PNetworkClient _network )
     : m_commandServices(_commandServices)
 {
-    m_networkRequest = m_commandServices->networkClient->getRequestInstance();
+    m_networkRequest = _network->getRequestInstance();
 }
 
 ICommand::~ICommand(){
@@ -49,6 +51,10 @@ bool ICommand::isReady(){
 
     m_incomingMsg = m_networkRequest->getAsyncResponse();
 
+    if( m_incomingMsg.find("pong") == std::string::npos ){
+        VS_LOG_INFO << "parsed msg [" << m_incomingMsg << "]" << endl;
+    }
+
     if( ! parseResponseTemplateMethodPart() ){
         return false;
     }
@@ -82,9 +88,8 @@ bool ICommand::exec(){
 
 bool ICommand::performBlockedNetworking(){
 
-    PEnvironmentRequest request = m_commandServices->networkClient->getRequestInstance();
-    request->setOutcomingMessage( m_outcomingMsg );
-    m_incomingMsg = request->getIncomingMessage();
+    m_networkRequest->setOutcomingMessage( m_outcomingMsg );
+    m_incomingMsg = m_networkRequest->getIncomingMessage();
     return true;
 }
 

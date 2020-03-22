@@ -9,6 +9,8 @@ namespace common_types {
 
 // typedefs
 using TNodeId = std::string;
+using TPid = pid_t;
+using TTimeRangeMillisec = std::pair<int64_t, int64_t>;
 
 }
 

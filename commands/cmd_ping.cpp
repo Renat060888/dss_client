@@ -2,13 +2,14 @@
 #include <microservice_common/system/logger.h>
 
 #include "cmd_ping.h"
+#include "cmd_register.h"
 
 namespace dss_client {
 
 using namespace std;
 
-CommandPing::CommandPing( common_types::SCommandServices * _commandServices )
-    : ICommand(_commandServices)
+CommandPing::CommandPing( common_types::SCommandServices * _commandServices, PNetworkClient _network )
+    : ICommand(_commandServices, _network)
 {
 
 }
@@ -16,7 +17,7 @@ CommandPing::CommandPing( common_types::SCommandServices * _commandServices )
 bool CommandPing::serializeRequestTemplateMethodPart(){
 
     Json::Value rootRecord;
-    rootRecord[ "user_id" ] = m_userId;
+    rootRecord[ "user_id" ] = ( m_toDSS ? m_userIdToDSS : m_userIdToPlayer );
     rootRecord[ "cmd_type" ] = "service";
     rootRecord[ "cmd_name" ] = "ping";
 
@@ -35,13 +36,34 @@ bool CommandPing::parseResponseTemplateMethodPart(){
         return false;
     }
 
+    m_commandServices->clientController->pongCatched();
 
+    if( m_toDSS ){
+        if( m_commandServices->clientController->isRegisteredInPlayer() ){
 
-    VS_LOG_INFO << "parsed msg [" << m_incomingMsg << "]" << endl;
+            const void * playerState;
 
-    m_commandServices;
+            // parse from message
 
+            m_commandServices->clientController->updatePlayer( playerState );
+        }
+        else{
+            m_commandServices->clientController->registerInPlayer();
+        }
+    }
+    else{
+        if( m_commandServices->clientController->isRegisteredInPlayer() ){
 
+            const void * playerState;
+
+            // parse from message
+
+            m_commandServices->clientController->updatePlayer( playerState );
+        }
+        else{
+            m_commandServices->clientController->registerInPlayer();
+        }
+    }
 
     return true;
 }

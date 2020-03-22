@@ -8,9 +8,9 @@ namespace dss_client {
 class CommandContextClose : public ICommand
 {
 public:
-    CommandContextClose( common_types::SCommandServices * _commandServices );
+    CommandContextClose( common_types::SCommandServices * _commandServices, PNetworkClient _network );
 
-    common_types::TClientUniqueId m_clientId;
+    common_types::TDssClientUniqueId m_clientId;
 
 private:
     virtual bool serializeRequestTemplateMethodPart() override;

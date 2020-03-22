@@ -9,9 +9,9 @@
 
 namespace dss_client {
 
-// the client's logic is maximum "stupid" - while connection is established what "good" and what "bad" treated by server
+// the client's logic is maximum "stupid" - once connection is established what "good" and what "bad" treated by server
 // the only reason a client can prohibit something by itself - it's connection absence to server
-// the client only show system's state and transfers commands
+// the client only show system's state and transfers async commands
 
 // NOTE: логика клиента максимально "тупая" - пока есть соединение с сервером, что "хорошо", а что "плохо" определяется сервером
 // NOTE: единственная причина, по которой клиент может что то запретить сам - это отсутсвие соединения с сервером

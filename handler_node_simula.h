@@ -55,6 +55,7 @@ public:
 
 
 private:
+    // private stuff
     class PrivateImplementation * m_impl;
 
 };
