@@ -155,12 +155,7 @@ public:
             return true;
         }
         else{
-            if( registraionOnPlayerInProgress ){
-                return true;
-            }
-            else{
-                return false;
-            }
+            return registraionOnPlayerInProgress;
         }
     }
 
