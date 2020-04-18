@@ -38,6 +38,8 @@ bool CommandPing::parseResponseTemplateMethodPart(){
 
     m_commandServices->clientController->pongCatched();
 
+    const string code = parsedRecord["code"].asString();
+
     if( m_toDSS ){
         if( m_commandServices->clientController->isRegisteredInPlayer() ){
 
