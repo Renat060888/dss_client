@@ -18,12 +18,12 @@ DEFINES += \
 
 LIBS += \
     -lpthread \
+    -lrabbitmq \
     -ljsoncpp \
-    -lmicroservice_common \
 
 # NOTE: paths for dev environment ( all projects sources in one dir )
 INCLUDEPATH +=  \
-    $${ROOT_DIR}/microservice_common/ \
+    $${PWD}/from_ms_common/ \
 
 SOURCES += \
         commands/cmd_context_close.cpp \
@@ -46,7 +46,13 @@ SOURCES += \
         handler_node_simula.cpp \
         handler_player.cpp \
         main.cpp \
-        player_handler.cpp
+        player_handler.cpp \
+    from_ms_common/communication/amqp_client_c.cpp \
+    from_ms_common/communication/amqp_controller.cpp \
+    from_ms_common/communication/network_interface.cpp \
+    from_ms_common/system/logger_astra.cpp \
+    from_ms_common/system/logger_normal.cpp \
+    from_ms_common/system/logger_simple.cpp
 
 HEADERS += \
     commands/cmd_context_close.h \
@@ -72,4 +78,14 @@ HEADERS += \
     handler_node_real.h \
     handler_node_simula.h \
     handler_player.h \
-    player_handler.h
+    player_handler.h \
+    from_ms_common/common/ms_common_types.h \
+    from_ms_common/common/ms_common_utils.h \
+    from_ms_common/communication/amqp_client_c.h \
+    from_ms_common/communication/amqp_controller.h \
+    from_ms_common/communication/network_interface.h \
+    from_ms_common/system/logger_astra.h \
+    from_ms_common/system/logger_common.h \
+    from_ms_common/system/logger_normal.h \
+    from_ms_common/system/logger_simple.h \
+    from_ms_common/system/logger.h

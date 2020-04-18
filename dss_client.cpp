@@ -1,10 +1,10 @@
 
 #include <thread>
 
-#include <microservice_common/communication/amqp_client_c.h>
-#include <microservice_common/communication/amqp_controller.h>
-#include <microservice_common/common/ms_common_utils.h>
-#include <microservice_common/system/logger.h>
+#include "from_ms_common/communication/amqp_client_c.h"
+#include "from_ms_common/communication/amqp_controller.h"
+#include "from_ms_common/common/ms_common_utils.h"
+#include "from_ms_common/system/logger.h"
 
 #include "dss_client.h"
 #include "common_vars.h"
