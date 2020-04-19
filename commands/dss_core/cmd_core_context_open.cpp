@@ -1,7 +1,7 @@
 
 #include <microservice_common/system/logger.h>
 
-#include "cmd_context_open.h"
+#include "cmd_core_context_open.h"
 
 namespace dss_client {
 

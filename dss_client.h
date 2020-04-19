@@ -13,10 +13,6 @@ namespace dss_client {
 // the only reason a client can prohibit something by itself - it's connection absence to server
 // the client only show system's state and transfers async commands
 
-// NOTE: логика клиента максимально "тупая" - пока есть соединение с сервером, что "хорошо", а что "плохо" определяется сервером
-// NOTE: единственная причина, по которой клиент может что то запретить сам - это отсутсвие соединения с сервером
-// NOTE: клиент только отображает состояние системы и передает команды
-
 class DssClient
 {
 public:
@@ -47,11 +43,11 @@ public:
     static void releaseInstance( DssClient * & );
 
     // callbacks
-    boost::signals2::signal<void( bool _online )> m_signalOnline;
-    boost::signals2::signal<void( std::string _msg )> m_signalMessage;
+    boost::signals2::signal<void( const std::string & _msg )> m_signalMessage;
+    boost::signals2::signal<void( bool _online )> m_signalPlayerOnline;
+    boost::signals2::signal<void( bool _online )> m_signalDSSOnline;
     boost::signals2::signal<void( bool _online, common_types::TNodeId _id )> m_signalNodeSimulationOnline;
     boost::signals2::signal<void( bool _online, common_types::TNodeId _id )> m_signalNodeRealOnline;
-    boost::signals2::signal<void( bool _online )> m_signalPlayerOnline;
 
     // system
     bool init( const SInitSettings & _settings );

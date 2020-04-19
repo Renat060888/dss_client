@@ -1,32 +1,32 @@
 
 #include <microservice_common/system/logger.h>
 
-#include "cmd_register.h"
-
-using namespace std;
+#include "cmd_player_context_open.h"
 
 namespace dss_client {
 
-CommandRegister::CommandRegister( common_types::SCommandServices * _commandServices, PNetworkClient _network )
+using namespace std;
+
+CommandPlayerContextOpen::CommandPlayerContextOpen( common_types::SCommandServices * _commandServices, PNetworkClient _network )
     : ICommand(_commandServices, _network)
 {
 
 }
 
-bool CommandRegister::serializeRequestTemplateMethodPart(){
+bool CommandPlayerContextOpen::serializeRequestTemplateMethodPart(){
 
     Json::Value rootRecord;
+    rootRecord[ "client_id" ] = m_clientId;
     rootRecord[ "cmd_type" ] = "service";
-    rootRecord[ "cmd_name" ] = "register";
-    rootRecord[ "user_ip" ] = m_userIpStr;
-    rootRecord[ "user_pid" ] = m_userPid;
+    rootRecord[ "cmd_name" ] = "context_open";
+    rootRecord[ "context_name" ] = m_contextName;
 
     m_outcomingMsg = m_jsonWriter.write( rootRecord );
 
     return true;
 }
 
-bool CommandRegister::parseResponseTemplateMethodPart(){
+bool CommandPlayerContextOpen::parseResponseTemplateMethodPart(){
 
     Json::Value parsedRecord;
     if( ! m_jsonReader.parse( m_incomingMsg.c_str(), parsedRecord, false ) ){
@@ -36,9 +36,8 @@ bool CommandRegister::parseResponseTemplateMethodPart(){
         return false;
     }
 
-    const common_types::TDssClientUniqueId userId = parsedRecord["user_id"].asString();
 
-    m_commandServices->clientController->setIdFromPlayer( userId );
+
 
     return true;
 }

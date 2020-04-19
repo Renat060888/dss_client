@@ -9,14 +9,17 @@
 #include "dss_client.h"
 #include "common_vars.h"
 #include "common_types_private.h"
-#include "commands/cmd_ping.h"
-#include "commands/cmd_register.h"
-#include "commands/cmd_context_open.h"
-#include "commands/cmd_context_close.h"
+#include "commands/dss_core/cmd_core_ping.h"
+#include "commands/player/cmd_player_ping.h"
+#include "commands/player/cmd_player_register.h"
+#include "commands/player/cmd_player_context_open.h"
+#include "commands/player/cmd_player_context_close.h"
 
 namespace dss_client {
 
 using namespace std;
+
+static int64_t PING_INTERVAL_MILLISEC = 1000;
 
 static DssClient * g_instance = nullptr;
 static int32_t g_instanceRefCounter = 0;
@@ -35,9 +38,9 @@ public:
         , clientUniqueIdForDSS(common_vars::INVALID_CLIENT_ID)
         , clientUniqueIdForPlayer(common_vars::INVALID_CLIENT_ID)
         , registraionOnDSSInProgress(false)
-        , registraionOnPlayerInProgress(false)
-        , lastPongMillisec(0)
-        , online(false)
+        , registrationOnPlayerInProgress(false)
+        , lastPlayerPongMillisec(0)
+        , onlinePlayer(false)
     {
         state = std::make_shared<DssClient::SState>();
     }
@@ -68,12 +71,14 @@ public:
     common_types::TDssClientUniqueId clientUniqueIdForDSS;
     common_types::TPlayerClientUniqueId clientUniqueIdForPlayer;
     bool registraionOnDSSInProgress;
-    bool registraionOnPlayerInProgress;
+    bool registrationOnPlayerInProgress;
 
-    PCommandPing commandPingToDss;
-    PCommandPing commandPingToPlayer;
-    int64_t lastPongMillisec;
-    bool online;
+    PCommandDSSPing commandPingToDss;
+    PCommandPlayerPing commandPingToPlayer;
+    int64_t lastPlayerPongMillisec;
+    int64_t lastDSSPongMillisec;
+    bool onlinePlayer;
+    bool onlineDSS;
 
     // service
     PNetworkClient networkClient;
@@ -84,7 +89,7 @@ public:
             // "rotate" network engine
             networkProvider->runNetworkCallbacks();
 
-            // clean executed command
+            // clean executed commands
             for( auto iter = commandsInProgress.begin(); iter != commandsInProgress.end(); ){
                 PCommand cmd = ( * iter );
 
@@ -97,27 +102,45 @@ public:
             }
 
             // online checking
-            if( online ){
-                if( (common_utils::getCurrentTimeMillisec() - lastPongMillisec) > 5000 ){
-                    VS_LOG_INFO << PRINT_HEADER << " Player OFFLINE" << endl;
-                    online = false;
-                    interface->m_signalOnline( false );
+            if( onlinePlayer ){
+                if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) > 5000 ){
+                    VS_LOG_INFO << PRINT_HEADER << " Player OFFLINE at " << common_utils::getCurrentDateTimeStr() << endl;
+                    onlinePlayer = false;
+                    interface->m_signalPlayerOnline( false );
                 }
             }
             else{
-                if( (common_utils::getCurrentTimeMillisec() - lastPongMillisec) < 5000 ){
-                    VS_LOG_INFO << PRINT_HEADER << " Player ONLINE" << endl;
-                    online = true;
-                    interface->m_signalOnline( true );
+                if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) < 5000 ){
+                    VS_LOG_INFO << PRINT_HEADER << " Player ONLINE at " << common_utils::getCurrentDateTimeStr() << endl;
+                    onlinePlayer = true;
+                    interface->m_signalPlayerOnline( true );
+                }
+            }
+
+            if( onlineDSS ){
+                if( (common_utils::getCurrentTimeMillisec() - lastDSSPongMillisec) > 5000 ){
+                    VS_LOG_INFO << PRINT_HEADER << " DSS OFFLINE" << endl;
+                    onlineDSS = false;
+                    interface->m_signalDSSOnline( false );
+                }
+            }
+            else{
+                if( (common_utils::getCurrentTimeMillisec() - lastDSSPongMillisec) < 5000 ){
+                    VS_LOG_INFO << PRINT_HEADER << " DSS ONLINE" << endl;
+                    onlineDSS = true;
+                    interface->m_signalDSSOnline( true );
                 }
             }
 
             // ping
             static int64_t lastPingAtMillisec = 0;
-            if( (common_utils::getCurrentTimeMillisec() - lastPingAtMillisec) > 1000 ){
+            if( (common_utils::getCurrentTimeMillisec() - lastPingAtMillisec) > PING_INTERVAL_MILLISEC ){
                 if( commandPingToPlayer->isReady() ){
                     commandPingToPlayer->execAsync();
                 }
+
+                // TODO: ping a DSS
+
                 lastPingAtMillisec = common_utils::getCurrentTimeMillisec();
             }
 
@@ -125,22 +148,32 @@ public:
         }
     }
 
-    virtual void pongCatched() override {
-        lastPongMillisec = common_utils::getCurrentTimeMillisec();
-    }
-
     // DSS
-    virtual bool isRegisteredInDSS() override {
-
-        bool registerInProgress = true;
-        bool idReceived = true;
-
-        return ( ! idReceived && ! registerInProgress );
+    virtual void pongByDSSCatched() override {
+        lastDSSPongMillisec = common_utils::getCurrentTimeMillisec();
     }
 
     virtual void registerInDSS() override {
 
+        if( registraionOnDSSInProgress ){
+            return;
+        }
 
+        registraionOnDSSInProgress = true;
+        PCommandPlayerRegister cmd = std::make_shared<CommandPlayerRegister>( & commandServices, commandServices.networkClientForDss );
+        cmd->m_userPid = ::getpid();
+        cmd->m_userIpStr = common_utils::getIpAddressStr();
+        cmd->execAsync();
+        commandsInProgress.push_back( cmd );
+    }
+
+    virtual void setIdFromDSS( const common_types::TDssClientUniqueId & _id ) override {
+
+        clientUniqueIdForDSS = _id;
+        commandPingToDss->m_userIdToDSS = _id;
+        registraionOnDSSInProgress = false;
+
+        VS_LOG_INFO << PRINT_HEADER << " registered in DSS with id [" << _id << "]" << endl;
     }
 
     virtual void updateNodes( const std::vector<void *> & _nodeStates ) override {
@@ -149,31 +182,29 @@ public:
     }
 
     // Player
-    virtual bool isRegisteredInPlayer() override {
-
-        if( clientUniqueIdForPlayer != common_vars::INVALID_CLIENT_ID ){
-            return true;
-        }
-        else{
-            return registraionOnPlayerInProgress;
-        }
+    virtual void pongByPlayerCatched() override {
+        lastPlayerPongMillisec = common_utils::getCurrentTimeMillisec();
     }
 
     virtual void registerInPlayer() override {
 
-        registraionOnPlayerInProgress = true;
-        PCommandRegister cmd = std::make_shared<CommandRegister>( & commandServices, commandServices.networkClientForPlayer );
+        if( (clientUniqueIdForPlayer != common_vars::INVALID_CLIENT_ID) || registrationOnPlayerInProgress ){
+            return;
+        }
+
+        registrationOnPlayerInProgress = true;
+        PCommandPlayerRegister cmd = std::make_shared<CommandPlayerRegister>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_userPid = ::getpid();
         cmd->m_userIpStr = common_utils::getIpAddressStr();
         cmd->execAsync();
         commandsInProgress.push_back( cmd );
     }
 
-    virtual void setIdFromPlayer( const common_types::TDssClientUniqueId & _id ) override {
+    virtual void setIdFromPlayer( const common_types::TPlayerClientUniqueId & _id ) override {
 
         clientUniqueIdForPlayer = _id;
         commandPingToPlayer->m_userIdToPlayer = _id;
-        registraionOnPlayerInProgress = false;
+        registrationOnPlayerInProgress = false;
 
         VS_LOG_INFO << PRINT_HEADER << " registered in Player with id [" << _id << "]" << endl;
     }
@@ -186,7 +217,7 @@ public:
 
     void callbackContextOpened( ::common_types::TContextId _ctxId ){
 
-        PCommandContextOpen cmd = std::make_shared<CommandContextOpen>( & commandServices, commandServices.networkClientForPlayer );
+        PCommandPlayerContextOpen cmd = std::make_shared<CommandPlayerContextOpen>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_clientId = clientUniqueIdForPlayer;
         cmd->m_contextName = "bla";
 
@@ -199,7 +230,7 @@ public:
 
     void callbackContextClosed(){
 
-        PCommandContextClose cmd = std::make_shared<CommandContextClose>( & commandServices, commandServices.networkClientForPlayer );
+        PCommandPlayerContextClose cmd = std::make_shared<CommandPlayerContextClose>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_clientId = clientUniqueIdForPlayer;
 
         if( ! cmd->execAsync() ){
@@ -245,9 +276,9 @@ public:
         routes.predatorExchangePointName = "dss_dx_clients";
         routes.predatorQueueName = "dss_q_client_mailbox_" + clientName;
         routes.predatorRoutingKeyName = "dss_rk_to_client_" + clientName;
-        routes.targetExchangePointName = "dss_dx_player";
-        routes.targetQueueName = "dss_q_player_mailbox";
-        routes.targetRoutingKeyName = "dss_rk_to_player";
+        routes.targetExchangePointName = "player_dx_agent";
+        routes.targetQueueName = "player_q_agent_mailbox";
+        routes.targetRoutingKeyName = "player_rk_to_agent";
 
         AmqpController::SInitSettings settings2;
         settings2.client = _networkClient;
@@ -354,9 +385,8 @@ bool DssClient::init( const SInitSettings & _settings ){
     m_impl->networkProvider = std::dynamic_pointer_cast<INetworkProvider>( m_impl->commandServices.networkClientForDss );
 
     // ping
-    m_impl->commandPingToDss = std::make_shared<CommandPing>( & m_impl->commandServices, m_impl->commandServices.networkClientForDss );
-    m_impl->commandPingToPlayer = std::make_shared<CommandPing>( & m_impl->commandServices, m_impl->commandServices.networkClientForPlayer );
-    m_impl->commandPingToPlayer->m_toDSS = false;
+    m_impl->commandPingToDss = std::make_shared<CommandDSSPing>( & m_impl->commandServices, m_impl->commandServices.networkClientForDss );
+    m_impl->commandPingToPlayer = std::make_shared<CommandPlayerPing>( & m_impl->commandServices, m_impl->commandServices.networkClientForPlayer );
 
     // async processing
     m_impl->threadClientMaintenance = new std::thread( & PrivateImplementation::threadMaintenance, m_impl );
@@ -370,3 +400,8 @@ const DssClient::PConstState DssClient::getState(){
 }
 
 }
+
+
+
+
+

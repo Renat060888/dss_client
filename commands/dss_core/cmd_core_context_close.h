@@ -1,7 +1,7 @@
-#ifndef CMD_CONTEXT_CLOSE_H
-#define CMD_CONTEXT_CLOSE_H
+#ifndef CMD_CORE_CONTEXT_CLOSE_H
+#define CMD_CORE_CONTEXT_CLOSE_H
 
-#include "i_command.h"
+#include "../i_command.h"
 
 namespace dss_client {
 
