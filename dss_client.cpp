@@ -19,7 +19,8 @@ namespace dss_client {
 
 using namespace std;
 
-static int64_t PING_INTERVAL_MILLISEC = 1000;
+static constexpr int64_t PING_INTERVAL_MILLISEC = 1000;
+static constexpr int64_t PONG_TIMEOUT_MILLISEC = 5000;
 
 static DssClient * g_instance = nullptr;
 static int32_t g_instanceRefCounter = 0;
@@ -84,67 +85,72 @@ public:
     PNetworkClient networkClient;
 
     void threadMaintenance(){
-
         while( ! shutdownCalled ){
-            // "rotate" network engine
+
             networkProvider->runNetworkCallbacks();
-
-            // clean executed commands
-            for( auto iter = commandsInProgress.begin(); iter != commandsInProgress.end(); ){
-                PCommand cmd = ( * iter );
-
-                if( cmd->isReady() ){
-                    iter = commandsInProgress.erase( iter );
-                }
-                else{
-                    ++iter;
-                }
-            }
-
-            // online checking
-            if( onlinePlayer ){
-                if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) > 5000 ){
-                    VS_LOG_INFO << PRINT_HEADER << " Player OFFLINE at " << common_utils::getCurrentDateTimeStr() << endl;
-                    onlinePlayer = false;
-                    interface->m_signalPlayerOnline( false );
-                }
-            }
-            else{
-                if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) < 5000 ){
-                    VS_LOG_INFO << PRINT_HEADER << " Player ONLINE at " << common_utils::getCurrentDateTimeStr() << endl;
-                    onlinePlayer = true;
-                    interface->m_signalPlayerOnline( true );
-                }
-            }
-
-            if( onlineDSS ){
-                if( (common_utils::getCurrentTimeMillisec() - lastDSSPongMillisec) > 5000 ){
-                    VS_LOG_INFO << PRINT_HEADER << " DSS OFFLINE" << endl;
-                    onlineDSS = false;
-                    interface->m_signalDSSOnline( false );
-                }
-            }
-            else{
-                if( (common_utils::getCurrentTimeMillisec() - lastDSSPongMillisec) < 5000 ){
-                    VS_LOG_INFO << PRINT_HEADER << " DSS ONLINE" << endl;
-                    onlineDSS = true;
-                    interface->m_signalDSSOnline( true );
-                }
-            }
-
-            // ping
-            static int64_t lastPingAtMillisec = 0;
-            if( (common_utils::getCurrentTimeMillisec() - lastPingAtMillisec) > PING_INTERVAL_MILLISEC ){
-                if( commandPingToPlayer->isReady() ){
-                    commandPingToPlayer->execAsync();
-                }
-
-                // TODO: ping a DSS
-
-                lastPingAtMillisec = common_utils::getCurrentTimeMillisec();
-            }
+            commandsProcessing();
+            remoteServicesMonitoring();
+            ping();
 
             std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+        }
+    }
+
+    inline void commandsProcessing(){
+        for( auto iter = commandsInProgress.begin(); iter != commandsInProgress.end(); ){
+            PCommand cmd = ( * iter );
+
+            if( cmd->isReady() ){
+                iter = commandsInProgress.erase( iter );
+            }
+            else{
+                ++iter;
+            }
+        }
+    }
+
+    inline void remoteServicesMonitoring(){
+        if( onlinePlayer ){
+            if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) > PONG_TIMEOUT_MILLISEC ){
+                VS_LOG_INFO << PRINT_HEADER << " Player OFFLINE at " << common_utils::getCurrentDateTimeStr() << endl;
+                onlinePlayer = false;
+                interface->m_signalPlayerOnline( false );
+            }
+        }
+        else{
+            if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) < PONG_TIMEOUT_MILLISEC ){
+                VS_LOG_INFO << PRINT_HEADER << " Player ONLINE at " << common_utils::getCurrentDateTimeStr() << endl;
+                onlinePlayer = true;
+                interface->m_signalPlayerOnline( true );
+            }
+        }
+
+        if( onlineDSS ){
+            if( (common_utils::getCurrentTimeMillisec() - lastDSSPongMillisec) > PONG_TIMEOUT_MILLISEC ){
+                VS_LOG_INFO << PRINT_HEADER << " DSS OFFLINE" << endl;
+                onlineDSS = false;
+                interface->m_signalDSSOnline( false );
+            }
+        }
+        else{
+            if( (common_utils::getCurrentTimeMillisec() - lastDSSPongMillisec) < PONG_TIMEOUT_MILLISEC ){
+                VS_LOG_INFO << PRINT_HEADER << " DSS ONLINE" << endl;
+                onlineDSS = true;
+                interface->m_signalDSSOnline( true );
+            }
+        }
+    }
+
+    inline void ping(){
+        static int64_t lastPingAtMillisec = 0;
+        if( (common_utils::getCurrentTimeMillisec() - lastPingAtMillisec) > PING_INTERVAL_MILLISEC ){
+            if( commandPingToPlayer->isReady() ){
+                commandPingToPlayer->execAsync();
+            }
+
+            // TODO: ping a DSS
+
+            lastPingAtMillisec = common_utils::getCurrentTimeMillisec();
         }
     }
 
@@ -154,8 +160,7 @@ public:
     }
 
     virtual void registerInDSS() override {
-
-        if( registraionOnDSSInProgress ){
+        if( (clientUniqueIdForDSS != common_vars::INVALID_CLIENT_ID) || registraionOnDSSInProgress ){
             return;
         }
 
@@ -168,7 +173,6 @@ public:
     }
 
     virtual void setIdFromDSS( const common_types::TDssClientUniqueId & _id ) override {
-
         clientUniqueIdForDSS = _id;
         commandPingToDss->m_userIdToDSS = _id;
         registraionOnDSSInProgress = false;
@@ -187,7 +191,6 @@ public:
     }
 
     virtual void registerInPlayer() override {
-
         if( (clientUniqueIdForPlayer != common_vars::INVALID_CLIENT_ID) || registrationOnPlayerInProgress ){
             return;
         }
@@ -201,7 +204,6 @@ public:
     }
 
     virtual void setIdFromPlayer( const common_types::TPlayerClientUniqueId & _id ) override {
-
         clientUniqueIdForPlayer = _id;
         commandPingToPlayer->m_userIdToPlayer = _id;
         registrationOnPlayerInProgress = false;
@@ -216,7 +218,6 @@ public:
     }
 
     void callbackContextOpened( ::common_types::TContextId _ctxId ){
-
         PCommandPlayerContextOpen cmd = std::make_shared<CommandPlayerContextOpen>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_clientId = clientUniqueIdForPlayer;
         cmd->m_contextName = "bla";
@@ -229,7 +230,6 @@ public:
     }
 
     void callbackContextClosed(){
-
         PCommandPlayerContextClose cmd = std::make_shared<CommandPlayerContextClose>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_clientId = clientUniqueIdForPlayer;
 
@@ -241,7 +241,6 @@ public:
     }
 
     PNetworkClient createDssConnection( const PNetworkClient & _networkClient ){
-
         const string clientName = "ip" + common_utils::getIpAddressStr() + "_" + "pid" + std::to_string( ::getpid() );        
 
         // client -> core
@@ -268,7 +267,6 @@ public:
     }
 
     PNetworkClient createPlayerConnection( const PNetworkClient & _networkClient ){
-
         const string clientName = "ip" + common_utils::getIpAddressStr() + "_" + "pid" + std::to_string( ::getpid() );
 
         // client -> player
@@ -295,7 +293,6 @@ public:
     }
 
     PNetworkClient createNetworkClient( const DssClient::SInitSettings & _settings ){
-
         PAmqpClient client = std::make_shared<AmqpClient>( INetworkEntity::INVALID_CONN_ID );
 
         AmqpClient::SInitSettings clientSettings;

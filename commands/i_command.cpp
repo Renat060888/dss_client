@@ -51,9 +51,9 @@ bool ICommand::isReady(){
 
     m_incomingMsg = m_networkRequest->getAsyncResponse();
 
-//    if( m_incomingMsg.find("pong") == std::string::npos ){
+    if( m_incomingMsg.find("pong") == std::string::npos ){
         VS_LOG_INFO << "parsed response [" << m_incomingMsg << "]" << endl;
-//    }
+    }
 
     if( ! parseResponseTemplateMethodPart() ){
         return false;
