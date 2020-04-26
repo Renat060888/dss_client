@@ -5,7 +5,7 @@
 #include <jsoncpp/json/reader.h>
 
 #include "common_vars.h"
-#include "cmd_play_realtime.h"
+#include "cmd_play_live.h"
 
 using namespace std;
 

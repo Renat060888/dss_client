@@ -16,7 +16,7 @@ CommandPlayerContextClose::CommandPlayerContextClose( common_types::SCommandServ
 bool CommandPlayerContextClose::serializeRequestTemplateMethodPart(){
 
     Json::Value rootRecord;
-    rootRecord[ "client_id" ] = m_clientId;
+    rootRecord[ "user_id" ] = m_userId;
     rootRecord[ "cmd_type" ] = "service";
     rootRecord[ "cmd_name" ] = "context_close";
 

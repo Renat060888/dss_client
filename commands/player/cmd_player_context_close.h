@@ -10,7 +10,7 @@ class CommandPlayerContextClose : public ICommand
 public:
     CommandPlayerContextClose( common_types::SCommandServices * _commandServices, PNetworkClient _network );
 
-    common_types::TDssClientUniqueId m_clientId;
+    common_types::TDssClientUniqueId m_userId;
 
 private:
     virtual bool serializeRequestTemplateMethodPart() override;

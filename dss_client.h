@@ -5,7 +5,7 @@
 
 #include "handler_node_simula.h"
 #include "handler_node_real.h"
-#include "handler_player.h"
+#include "player_handler.h"
 
 namespace dss_client {
 
@@ -54,7 +54,7 @@ public:
     const PConstState getState();
 
     // handlers
-    PHandlerPlayer getPlayerHandler();
+    PPlayerHandler getPlayerHandler();
 
     PHandlerNodeSimula getNodeSimulaHandler( common_types::TNodeId _id );
     std::vector<PHandlerNodeSimula> getNodeSimulaHandlers();
@@ -72,7 +72,7 @@ private:
     DssClient & operator=( const DssClient & ) = delete;
 
     // private stuff
-    class PrivateImplementation * m_impl;
+    class PrivateImplementationDC * m_impl;
 };
 
 }

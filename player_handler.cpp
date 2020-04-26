@@ -8,7 +8,7 @@
 #include "commands/player/cmd_play_reverse.h"
 #include "commands/player/cmd_play_speed.h"
 #include "commands/player/cmd_play_step.h"
-#include "commands/player/cmd_play_realtime.h"
+#include "commands/player/cmd_play_live.h"
 
 using namespace std;
 
@@ -19,13 +19,18 @@ using namespace common_types;
 // --------------------------------------------------------------------
 // private
 // --------------------------------------------------------------------
-class PrivateImplementation {
+class PrivateImplementationPH {
 public:
-    PrivateImplementation()
+    PrivateImplementationPH()
     {}
 
     PlayerHandler::SState state;
     SCommandServices commandServices;
+
+
+
+
+
 };
 
 // --------------------------------------------------------------------
@@ -38,6 +43,10 @@ PlayerHandler::PlayerHandler()
 
 PlayerHandler::~PlayerHandler()
 {
+
+}
+
+void PlayerHandler::updateState( const common_types::SPlayingServiceState & _state ){
 
 }
 

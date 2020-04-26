@@ -16,7 +16,7 @@ CommandPlayerContextOpen::CommandPlayerContextOpen( common_types::SCommandServic
 bool CommandPlayerContextOpen::serializeRequestTemplateMethodPart(){
 
     Json::Value rootRecord;
-    rootRecord[ "client_id" ] = m_clientId;
+    rootRecord[ "user_id" ] = m_userId;
     rootRecord[ "cmd_type" ] = "service";
     rootRecord[ "cmd_name" ] = "context_open";
     rootRecord[ "context_name" ] = m_contextName;

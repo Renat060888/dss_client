@@ -27,7 +27,7 @@ public:
     virtual void pongByPlayerCatched() = 0;
     virtual void registerInPlayer() = 0;
     virtual void setIdFromPlayer( const TPlayerClientUniqueId & _id ) = 0;
-    virtual void updatePlayer( const void * & _playerState ) = 0;
+    virtual void updatePlayer( bool _stateHasCome, const SPlayingServiceState & _state ) = 0;
 };
 
 

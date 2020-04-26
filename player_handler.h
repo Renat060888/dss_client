@@ -9,35 +9,14 @@ namespace dss_client{
 
 class PlayerHandler
 {
-public:
-    enum class EPlayerStatus {
-        INITED,
-        PREPARING,
-        READY,
-
-        PLAYING,
-        ALL_STEPS_PASSED,
-        NOT_ENOUGH_STEPS,
-        PAUSED,
-        STOPPED,
-        PLAY_FROM_POSITION,
-        CLOSE,
-
-        ACTIVE,
-        IDLE,
-
-        CRASHED,
-        UNDEFINED
-    };
-
+    friend class PrivateImplementationDC;
+public:   
     struct SState {
-        SState()
-            : status(EPlayerStatus::UNDEFINED)
+        SState()        
         {}
-        std::string id;
-        EPlayerStatus status;
-        std::string lastError;
 
+        common_types::SPlayingServiceState state;
+        std::string lastError;
     };
 
     PlayerHandler();
@@ -50,19 +29,23 @@ public:
     void stop();
     bool stepForward();
     bool stepBackward();
-    bool setRange( const common_types::TTimeRangeMillisec & _range );
-    void switchReverseMode( bool _reverse );
-    void switchLoopMode( bool _loop );
-    void switchLiveMode( bool _realtime );
+
     bool playFromPosition( int64_t _stepMillisec );
     bool increasePlayingSpeed();
     bool decreasePlayingSpeed();
     void normalizePlayingSpeed();
+    bool setRange( const common_types::TTimeRangeMillisec & _range );
+
+    void switchReverseMode( bool _reverse );
+    void switchLoopMode( bool _loop );
+    void switchLiveMode( bool _realtime );
 
 
 private:
     // private stuff
-    class PrivateImplementation * m_impl;
+    class PrivateImplementationPH * m_impl;
+
+    void updateState( const common_types::SPlayingServiceState & _state );
 };
 using PPlayerHandler = std::shared_ptr<PlayerHandler>;
 

@@ -10,7 +10,7 @@ class CommandPlayerContextOpen : public ICommand
 public:
     CommandPlayerContextOpen( common_types::SCommandServices * _commandServices, PNetworkClient _network );
 
-    common_types::TDssClientUniqueId m_clientId;
+    common_types::TDssClientUniqueId m_userId;
     std::string m_contextName;
 
 private:
