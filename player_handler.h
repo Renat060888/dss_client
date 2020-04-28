@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "common_types_public.h"
+#include "common_types_private.h"
 
 namespace dss_client{
 
@@ -11,17 +12,23 @@ class PlayerHandler
 {
     friend class PrivateImplementationDC;
 public:   
+    struct SInitSettings {
+        common_types::TPlayerClientUniqueId userId;
+    };
+
     struct SState {
         SState()        
         {}
 
-        common_types::SPlayingServiceState state;
+        common_types::SPlayingServiceState playingState;
+        SInitSettings settings;
         std::string lastError;
     };
 
-    PlayerHandler();
+    PlayerHandler( common_types::SCommandServices & _commandServices );
     ~PlayerHandler();
 
+    bool init( const SInitSettings & _settings );
     const SState & getPlayerState();
 
     void start();

@@ -31,6 +31,7 @@ bool CommandPlaySpeed::serializeRequestTemplateMethodPart(){
     root[ "cmd_name" ] = "play_with_speed";
     root[ "increase" ] = increase;
     root[ "normalize" ] = normalize;
+    root[ "user_id" ] = m_userIdToPlayer;
 
     Json::FastWriter writer;
     m_outcomingMsg = writer.write( root );

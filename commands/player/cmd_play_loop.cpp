@@ -29,6 +29,7 @@ bool CommandPlayLoop::serializeRequestTemplateMethodPart(){
     Json::Value root;
     root[ "cmd_type" ] = "analyze";
     root[ "cmd_name" ] = "play_loop";
+    root[ "user_id" ] = m_userIdToPlayer;
     root[ "loop" ] = loop;
 
     Json::FastWriter writer;

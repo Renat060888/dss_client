@@ -30,6 +30,7 @@ bool CommandPlayReverse::serializeRequestTemplateMethodPart(){
     root[ "cmd_type" ] = "analyze";
     root[ "cmd_name" ] = "play_reverse";
     root[ "reverse" ] = reverse;
+    root[ "user_id" ] = m_userIdToPlayer;
 
     Json::FastWriter writer;
     m_outcomingMsg = writer.write( root );

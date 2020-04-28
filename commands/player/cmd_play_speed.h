@@ -10,6 +10,7 @@ public:
     CommandPlaySpeed( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlaySpeed();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
     bool increase;
     bool normalize;
 

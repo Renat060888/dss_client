@@ -10,6 +10,7 @@ public:
     CommandPlayReverse( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayReverse();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
     bool reverse;
 
 

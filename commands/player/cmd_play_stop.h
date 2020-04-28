@@ -7,10 +7,10 @@ namespace dss_client{
 
 class CommandPlayStop : public ICommand {
 public:
-
     CommandPlayStop( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayStop();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
 
 private:
     virtual bool serializeRequestTemplateMethodPart() override;

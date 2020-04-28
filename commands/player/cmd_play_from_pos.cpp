@@ -29,6 +29,7 @@ bool CommandPlayFromPos::serializeRequestTemplateMethodPart(){
     Json::Value root;
     root[ "cmd_type" ] = "analyze";
     root[ "cmd_name" ] = "play_from_pos";
+    root[ "user_id" ] = m_userIdToPlayer;
     root[ "target_pos_ms" ] = (long long)targetPosMillisec;
 
     Json::FastWriter writer;

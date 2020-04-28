@@ -5,19 +5,12 @@
 
 namespace dss_client{
 
-class CommandPlayStart : public ICommand {
-    // TODO: private CTOR/DTOR
-    friend class VideoServerClient;
+class CommandPlayStart : public ICommand {    
 public:
-    struct SInitialParams {
-        SInitialParams()
-        {}
-    };
-
     CommandPlayStart( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayStart();
 
-    bool init( SInitialParams _params );
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
 
 private:
     virtual bool serializeRequestTemplateMethodPart() override;

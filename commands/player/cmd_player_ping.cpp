@@ -13,9 +13,40 @@ using namespace common_types;
 
 static bool readState( const Json::Value & _record, SPlayingServiceState & _newState ){
 
+    _newState.info.stepIntervalMillisec = _record["step_interval"].asInt64();
+    _newState.info.currentStepMillisec = _record["current_step"].asInt64();
+    _newState.info.globalRangeMillisec.first = _record["global_range_left"].asInt64();
+    _newState.info.globalRangeMillisec.second = _record["global_range_right"].asInt64();
 
+//    cout << "update step: " << info.stepIntervalMillisec << endl;
+//    cout << "curr step: " << common_utils::timeMillisecToStr(info.currentStepMillisec) << endl;
+//    cout << "gl left step: " << common_utils::timeMillisecToStr(info.globalRangeMillisec.first) << endl;
+//    cout << "gl right step: " << common_utils::timeMillisecToStr(info.globalRangeMillisec.second) << endl;
 
+    const Json::Value & dataSets = _record["datasets"];
+    for( int i = 0; i < dataSets.size(); i++ ){
+        const Json::Value & arrElement = dataSets[ i ];
 
+        common_types::SPlayingDataSet dataSet;
+        dataSet.uniqueId = arrElement["unique_id"].asInt64();
+        dataSet.real = arrElement["real"].asBool();
+//        dataSet.description = arrElement["descr"].asString();
+
+        const Json::Value & ranges = arrElement["ranges"];
+        for( int i = 0; i < ranges.size(); i++ ){
+            const Json::Value & arrElement = ranges[ i ];
+
+//            cout << "range left: " << common_utils::timeMillisecToStr(arrElement["range_left"].asInt64()) << endl;
+//            cout << "range right: " << common_utils::timeMillisecToStr(arrElement["range_right"].asInt64()) << endl;
+
+            dataSet.dataRanges.push_back( {arrElement["range_left"].asInt64(),
+                                           arrElement["range_right"].asInt64()} );
+        }
+
+        _newState.info.playingData.push_back( dataSet );
+    }
+
+    return true;
 }
 
 CommandPlayerPing::CommandPlayerPing( common_types::SCommandServices * _commandServices, PNetworkClient _network )
@@ -45,6 +76,8 @@ bool CommandPlayerPing::parseResponseTemplateMethodPart(){
                      << endl;
         return false;
     }
+
+    cout << "pong from player: " << m_incomingMsg << endl;
 
     // pong detect
     m_commandServices->clientController->pongByPlayerCatched();

@@ -226,8 +226,13 @@ public:
                 playerHandler->updateState( _state );
             }
             else{
-                playerHandler = std::make_shared<PlayerHandler>();
+                PlayerHandler::SInitSettings settings;
+                settings.userId = clientUniqueIdForPlayer;
+
+                playerHandler = std::make_shared<PlayerHandler>( commandServices );
+                playerHandler->init( settings );
                 playerHandler->updateState( _state );
+
                 interface->m_signalPlayerOnline( true );
             }
         }
@@ -429,20 +434,22 @@ PPlayerHandler DssClient::getPlayerHandler(){
 
 PHandlerNodeSimula DssClient::getNodeSimulaHandler( common_types::TNodeId _id ){
 
-
+    // TODO: do
 }
 
 std::vector<PHandlerNodeSimula> DssClient::getNodeSimulaHandlers(){
 
+    // TODO: do
 }
 
 PHandlerNodeReal DssClient::getNodeRealHandler( common_types::TNodeId _id ){
 
-
+    // TODO: do
 }
 
 std::vector<PHandlerNodeReal> DssClient::getNodeRealHandlers(){
 
+    // TODO: do
 }
 
 const DssClient::PConstState DssClient::getState(){

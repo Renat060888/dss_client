@@ -10,6 +10,7 @@ public:
     CommandPlayStep( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayStep();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
     bool stepForward;
 
 

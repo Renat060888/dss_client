@@ -49,7 +49,6 @@ SOURCES += \
     fakeobjrepr.cpp \
     handler_node_real.cpp \
     handler_node_simula.cpp \
-    handler_player.cpp \
     main.cpp \
     player_handler.cpp \
     from_ms_common/communication/amqp_client_c.cpp \
@@ -87,7 +86,6 @@ HEADERS += \
     fakeobjrepr.h \
     handler_node_real.h \
     handler_node_simula.h \
-    handler_player.h \
     player_handler.h \
     from_ms_common/common/ms_common_types.h \
     from_ms_common/common/ms_common_utils.h \

@@ -38,7 +38,7 @@ bool CommandRegister::parseResponseTemplateMethodPart(){
 
     const common_types::TDssClientUniqueId userId = parsedRecord["user_id"].asString();
 
-    m_commandServices->clientController->setIdFromPlayer( userId );
+    m_commandServices->clientController->setIdFromDSS( userId );
 
     return true;
 }

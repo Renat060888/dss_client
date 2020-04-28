@@ -37,7 +37,6 @@ bool CommandPlayerRegister::parseResponseTemplateMethodPart(){
     }
 
     const common_types::TDssClientUniqueId userId = parsedRecord["user_id"].asString();
-
     m_commandServices->clientController->setIdFromPlayer( userId );
 
     return true;

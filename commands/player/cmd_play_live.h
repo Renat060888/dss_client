@@ -10,6 +10,7 @@ public:
     CommandPlayLive( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayLive();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
     bool live;
 
 

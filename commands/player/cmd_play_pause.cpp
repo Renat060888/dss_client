@@ -29,6 +29,7 @@ bool CommandPlayPause::serializeRequestTemplateMethodPart(){
     Json::Value root;
     root[ "cmd_type" ] = "analyze";
     root[ "cmd_name" ] = "play_pause";
+    root[ "user_id" ] = m_userIdToPlayer;
 
     Json::FastWriter writer;
     m_outcomingMsg = writer.write( root );

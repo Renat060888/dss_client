@@ -10,6 +10,7 @@ public:
     CommandPlayLoop( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayLoop();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
     bool loop;
 
 private:

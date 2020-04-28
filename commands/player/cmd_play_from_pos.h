@@ -10,6 +10,7 @@ public:
     CommandPlayFromPos( common_types::SCommandServices * _commandServices, PNetworkClient _network );
     ~CommandPlayFromPos();
 
+    common_types::TPlayerClientUniqueId m_userIdToPlayer;
     int64_t targetPosMillisec;
 
 
