@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include <boost/signals2.hpp>
+
 #include "common_types_public.h"
 #include "common_types_private.h"
 
@@ -24,12 +26,18 @@ public:
         SInitSettings settings;
         std::string lastError;
     };
+    using PState = std::shared_ptr<SState>;
+    using PConstState = std::shared_ptr<const SState>;
+
+    boost::signals2::signal<void()> m_stateUpdated;
 
     PlayerHandler( common_types::SCommandServices & _commandServices );
     ~PlayerHandler();
 
     bool init( const SInitSettings & _settings );
-    const SState & getPlayerState();
+    const SState & getStateRef();
+    const PState getStatePtr();
+    const PConstState getStateConstPtr();
 
     void start();
     void pause();

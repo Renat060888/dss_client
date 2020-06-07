@@ -1,11 +1,15 @@
 #ifndef COMMON_TYPES_PRIVATE_H
 #define COMMON_TYPES_PRIVATE_H
 
-#include <microservice_common/communication/network_interface.h>
+#include "from_ms_common/communication/network_interface.h"
 
 #include "common_types_public.h"
 
 namespace dss_client {
+
+class ICommand;
+using PCommand = std::shared_ptr<ICommand>;
+
 namespace common_types {
 
 
@@ -28,6 +32,8 @@ public:
     virtual void registerInPlayer() = 0;
     virtual void setIdFromPlayer( const TPlayerClientUniqueId & _id ) = 0;
     virtual void updatePlayer( bool _stateHasCome, const SPlayingServiceState & _state ) = 0;
+
+    virtual void addCommmand( PCommand _cmd ) = 0;
 };
 
 

@@ -1,5 +1,5 @@
 
-#include <microservice_common/system/logger.h>
+#include "from_ms_common/system/logger.h"
 
 #include "common_utils.h"
 #include "common_vars.h"
@@ -18,11 +18,6 @@ static bool readState( const Json::Value & _record, SPlayingServiceState & _newS
     _newState.info.globalRangeMillisec.first = _record["global_range_left"].asInt64();
     _newState.info.globalRangeMillisec.second = _record["global_range_right"].asInt64();
 
-//    cout << "update step: " << info.stepIntervalMillisec << endl;
-//    cout << "curr step: " << common_utils::timeMillisecToStr(info.currentStepMillisec) << endl;
-//    cout << "gl left step: " << common_utils::timeMillisecToStr(info.globalRangeMillisec.first) << endl;
-//    cout << "gl right step: " << common_utils::timeMillisecToStr(info.globalRangeMillisec.second) << endl;
-
     const Json::Value & dataSets = _record["datasets"];
     for( int i = 0; i < dataSets.size(); i++ ){
         const Json::Value & arrElement = dataSets[ i ];
@@ -36,11 +31,7 @@ static bool readState( const Json::Value & _record, SPlayingServiceState & _newS
         for( int i = 0; i < ranges.size(); i++ ){
             const Json::Value & arrElement = ranges[ i ];
 
-//            cout << "range left: " << common_utils::timeMillisecToStr(arrElement["range_left"].asInt64()) << endl;
-//            cout << "range right: " << common_utils::timeMillisecToStr(arrElement["range_right"].asInt64()) << endl;
-
-            dataSet.dataRanges.push_back( {arrElement["range_left"].asInt64(),
-                                           arrElement["range_right"].asInt64()} );
+            dataSet.dataRanges.push_back( {arrElement["range_left"].asInt64(), arrElement["range_right"].asInt64()} );
         }
 
         _newState.info.playingData.push_back( dataSet );
@@ -77,7 +68,7 @@ bool CommandPlayerPing::parseResponseTemplateMethodPart(){
         return false;
     }
 
-    cout << "pong from player: " << m_incomingMsg << endl;
+//    cout << "pong from player: " << m_incomingMsg << endl;
 
     // pong detect
     m_commandServices->clientController->pongByPlayerCatched();

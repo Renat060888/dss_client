@@ -1,5 +1,5 @@
 
-#include <microservice_common/system/logger.h>
+#include "from_ms_common/system/logger.h"
 
 #include "common_vars.h"
 #include "cmd_core_register.h"

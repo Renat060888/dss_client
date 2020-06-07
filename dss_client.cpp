@@ -1,6 +1,7 @@
 
 #include <thread>
 
+#include <objrepr/reprServer.h>
 #include "from_ms_common/communication/amqp_client_c.h"
 #include "from_ms_common/communication/amqp_controller.h"
 #include "from_ms_common/common/ms_common_utils.h"
@@ -15,8 +16,6 @@
 #include "commands/player/cmd_player_register.h"
 #include "commands/player/cmd_player_context_open.h"
 #include "commands/player/cmd_player_context_close.h"
-
-#include "fakeobjrepr.h"
 
 namespace dss_client {
 
@@ -45,7 +44,9 @@ public:
         , registrationOnDSSInProgress(false)
         , registrationOnPlayerInProgress(false)
         , lastPlayerPongMillisec(0)
+        , lastDSSPongMillisec(0)
         , onlinePlayer(false)
+        , onlineDSS(false)
     {
         state = std::make_shared<DssClient::SState>();
     }
@@ -75,6 +76,8 @@ public:
     TPlayerClientUniqueId clientUniqueIdForPlayer;
     bool registrationOnDSSInProgress;
     bool registrationOnPlayerInProgress;
+
+    PCommandPlayerContextOpen commandOpenContext;
 
     PCommandDSSPing commandPingToDss;
     PCommandPlayerPing commandPingToPlayer;
@@ -112,6 +115,11 @@ public:
                 ++iter;
             }
         }
+
+        // avoid recursive call ( command container invalidate it's iterators )
+        if( commandOpenContext && commandOpenContext->isReady() ){
+            commandOpenContext.reset();
+        }
     }
 
     inline void remoteServicesMonitoring(){
@@ -123,13 +131,14 @@ public:
                 // set player handler in UNAVAILABLE state
 
                 interface->m_signalPlayerOnline( false );
+                playerHandler.reset();
             }
         }
         else{
             if( (common_utils::getCurrentTimeMillisec() - lastPlayerPongMillisec) < PONG_TIMEOUT_MILLISEC ){
                 VS_LOG_INFO << PRINT_HEADER << " Player ONLINE at " << common_utils::getCurrentDateTimeStr() << endl;
                 onlinePlayer = true;
-                interface->m_signalPlayerOnline( true );
+//                interface->m_signalPlayerOnline( true );
             }
         }
 
@@ -160,6 +169,10 @@ public:
 
             lastPingAtMillisec = common_utils::getCurrentTimeMillisec();
         }
+    }
+
+    virtual void addCommmand( PCommand _cmd ) override {
+        commandsInProgress.push_back( _cmd );
     }
 
     // DSS
@@ -217,6 +230,11 @@ public:
         registrationOnPlayerInProgress = false;
 
         VS_LOG_INFO << PRINT_HEADER << " registered in Player with id [" << _id << "]" << endl;
+
+        // context monitoring
+        if( objrepr::RepresentationServer::instance()->currentContext() ){
+            callbackContextOpened();
+        }
     }
 
     virtual void updatePlayer( bool _stateHasCome, const SPlayingServiceState & _state ) override {
@@ -244,22 +262,22 @@ public:
         }
     }
 
-    void callbackContextOpened( ::common_types::TContextId _ctxId ){
-        cout << "OPEN CTX: " << _ctxId << endl;
+    void callbackContextOpened(){
+        VS_LOG_INFO << PRINT_HEADER << " ctx open event" << endl;
 
         PCommandPlayerContextOpen cmd = std::make_shared<CommandPlayerContextOpen>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_userId = clientUniqueIdForPlayer;
-        cmd->m_contextName = "bla";
+        cmd->m_contextName = objrepr::RepresentationServer::instance()->currentContext()->name();
 
         if( ! cmd->execAsync() ){
             VS_LOG_INFO << PRINT_HEADER << " cmd failed, reason [" << cmd->getLastError() << "]" << endl;
         }
 
-        commandsInProgress.push_back( cmd );
+        commandOpenContext = cmd;
     }
 
     void callbackContextClosed(){
-        cout << "CLOSE CTX" << endl;
+        VS_LOG_INFO << PRINT_HEADER << " ctx close event" << endl;
 
         PCommandPlayerContextClose cmd = std::make_shared<CommandPlayerContextClose>( & commandServices, commandServices.networkClientForPlayer );
         cmd->m_userId = clientUniqueIdForPlayer;
@@ -401,10 +419,6 @@ bool DssClient::init( const SInitSettings & _settings ){
 
     m_impl->state->settings = _settings;
 
-    // subscribe to objrepr-context events
-    FakeObjrepr::singleton().m_signalCtxOpened.connect( boost::bind( & PrivateImplementationDC::callbackContextOpened, m_impl, boost::placeholders::_1) );
-    FakeObjrepr::singleton().m_signalCtxClosed.connect( boost::bind( & PrivateImplementationDC::callbackContextClosed, m_impl ) );
-
     // network
     m_impl->networkClient = m_impl->createNetworkClient( _settings );
     m_impl->commandServices.clientController = m_impl;
@@ -422,6 +436,10 @@ bool DssClient::init( const SInitSettings & _settings ){
 
     // async processing
     m_impl->threadClientMaintenance = new std::thread( & PrivateImplementationDC::threadMaintenance, m_impl );
+
+    // subscribe to objrepr-context events
+    objrepr::RepresentationServer::instance()->contextLoadingFinished.connect( boost::bind( & PrivateImplementationDC::callbackContextOpened, m_impl) );
+    objrepr::RepresentationServer::instance()->contextUnloaded.connect( boost::bind( & PrivateImplementationDC::callbackContextClosed, m_impl) );
 
     VS_LOG_INFO << PRINT_HEADER << " init success" << endl;
     return true;

@@ -46,7 +46,6 @@ SOURCES += \
     commands/player/cmd_player_ping.cpp \
     commands/player/cmd_player_register.cpp \
     dss_client.cpp \
-    fakeobjrepr.cpp \
     handler_node_real.cpp \
     handler_node_simula.cpp \
     main.cpp \
@@ -83,7 +82,6 @@ HEADERS += \
     common_utils.h \
     common_vars.h \
     dss_client.h \
-    fakeobjrepr.h \
     handler_node_real.h \
     handler_node_simula.h \
     player_handler.h \

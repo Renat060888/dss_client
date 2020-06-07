@@ -10,11 +10,11 @@ int main( int argc, char ** argv, char ** env ){
     dss_client::DssClient * client = dss_client::DssClient::getInstance();
 
     dss_client::DssClient::SInitSettings settings;
-    settings.amqpBrokerHost = "localhost";
-    settings.amqpBrokerVirtualHost = "/";
+    settings.amqpBrokerHost = "lenin";
+    settings.amqpBrokerVirtualHost = "safecity";
     settings.amqpBrokerPort = 5672;
-    settings.amqpLogin = "guest";
-    settings.amqpPass = "guest";
+    settings.amqpLogin = "scuser";
+    settings.amqpPass = "scpass";
 
     if( ! client->init(settings) ){
         return 1;
